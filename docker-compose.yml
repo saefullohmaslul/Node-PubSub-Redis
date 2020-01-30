@@ -1,0 +1,50 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:11
+    container_name: 'node_pubsub_redis_db'
+    volumes:
+      - pubsub_redis_db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=boilerplate
+      - POSTGRES_DB=pubsub_redis
+      - POSTGRES_PORT=5433
+    ports:
+      - 5433:5432
+    networks:
+      - net
+
+  pubsub_redis:
+    image: node:11
+    container_name: 'pubsub_redis'
+    build: .
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    environment:
+      DB_HOST: host.docker.internal
+    volumes:
+      - .:/app/
+    ports:
+      - 5000:5000
+    working_dir: /app/
+    network_mode: host
+    command: npm run dev
+
+  redis:
+    container_name: redis_pubsub
+    environment:
+      REDIS_HOST: redis
+    image: redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  pubsub_redis_db:
+
+networks:
+  net:
+    driver: bridge
